@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Header-->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">Search Products</h1>
+            <p class="lead fw-normal text-white-50 mb-0">Find What Your Looking For...</p>
+        </div>
+    </div>
+</header>
+
+<center>
+<div class="card">
+    <div class="card-header">
+      Search Products
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{% url 'search' %}">
+        {% csrf_token %}
+        <form>
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="Do your search">
+              <small name="searched">Search</small>
+            </div>
+
+            <button type="submit" class="btn btn-secondary">Search</button>
+          </form>
+      </form>
+    </div>
+  </div>
+
+{% if searched %}
+
+{% for product in searched %}
+{% if product.is_sale %}
+SALE!!!
+{% else %}
+<div class="col mb-5">
+<div class="card h-100">
+    <!-- Product image-->
+     <div class="badge bg-dark text-white position=absolute"
+     style="top: 0.5rem; right: 0.5rem">Sales</div>
+    <img class="card-img-top" src="{{ product.image.url }}" alt="..." />
+    <!-- Product details-->
+    <div class="card-body p-4">
+        <div class="text-center">
+            <!-- Product name-->
+            <h5 class="fw-bolder">{{ product.name }}</h5>
+            <!-- Product price-->
+            <strike>{{ product.price }}</strike>
+            <strike>{{ product.sale_price }}</strike>
+           <br/>
+           {{ product.category}}
+          
+        </div>
+    </div>
+    <!-- Product actions-->
+    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+        <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="{% url 'product' product.id %}">View Product</a></div>
+    </div>
+</div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endif %}
+
+</center>
+
+<br><br><br><br><br>
+
+
+{% endblock %}
