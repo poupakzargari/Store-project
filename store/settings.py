@@ -27,7 +27,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mystore',
-    'cart'
+    'cart',
+    # Other apps
+    'cities_light'
 ]
 
 MIDDLEWARE = [
@@ -60,6 +62,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'store.wsgi.application'
+DJANGO_SETTINGS_MODULE = 'blossom.settings'
+# GDAL_LIBRARY_PATH = ''
 
 
 # Database
@@ -68,7 +72,7 @@ WSGI_APPLICATION = 'store.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mystore',
+        'NAME': 'mystore2',
         'USER': 'postgres',
         'PASSWORD': '3PelRandy$',
         'HOST': 'localhost',

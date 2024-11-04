@@ -2,12 +2,37 @@ from django.db import models
 import datetime
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-
-# Create Customer Profile
-class Profile(models.Model):
+    
+class Store(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    date_modified = models.DateTimeField(User, auto_now=True)
+    store_name = models.CharField(max_length=100, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+    latitude = models.FloatField(default=0.0, blank=True)
+    longitude = models.FloatField(default=0.0, blank=True)
+
+    def __str__(self): 
+        return self.store_name
+
+
+
+class Profile(models.Model):
+    
+    # Role Choices for Users (either 'store' or 'customer')
+    ROLE_CHOICES = (
+        ('store', 'Store'),
+        ('customer', 'Customer'),
+    )
+    
+    # Connect Profile to the User model
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    
+    # Add role field with choices
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='customer', blank=False)
+
+    # Other fields
+    date_modified = models.DateTimeField(auto_now=True)
     phone = models.CharField(max_length=20, blank=True)
     address1 = models.CharField(max_length=200, blank=True)
     address2 = models.CharField(max_length=200, blank=True)
@@ -19,6 +44,7 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.username
+
     
  
 # Create a user Profile by default when user signs up
@@ -28,7 +54,7 @@ def create_profile(sender, instance, created, **kwargs):
         user_profile.save()
 
 # Automate the profile thing
-post_save.connect(create_profile, sender=User)
+# post_save.connect(create_profile, sender=User)
     
 
 class Category(models.Model):
@@ -38,11 +64,12 @@ class Category(models.Model):
         return self.name
 
 class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=10)
+    phone = models.CharField(max_length=20, default='', blank=True)
     email = models.EmailField(max_length=100)
-    password = models.CharField(max_length=100)
+    # password = models.CharField(max_length=100)
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
@@ -54,6 +81,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1)
     description = models.CharField(max_length=250, default='', blank=True, null=True)
     image = models.ImageField(upload_to='uploads/product/')
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='products', null=True)
 
     # Add Sale Stuff
     is_sale = models.BooleanField(default=False)

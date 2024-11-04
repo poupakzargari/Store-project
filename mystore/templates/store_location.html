@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set Store Location</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2f6aCXZ0LZ5fz1AjF1szTt1D0ZCp9Zj6fETp1VyBQ4Jbc5uVVsdVPyzJ1hjIvPBrJMFd9tJQ==" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-a4R4D7G6J2KK2xERuI4w9RZ0OEECRZ6oXeRjvK9u+x5oHBNRTyy5a/qs6qer5F5jy4sChQd+jf3g5v4pqjVMsA==" crossorigin=""></script>
+
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h2>Select Your Store Location</h2>
+    <form method="post" action="{% url 'save_store_location' %}">
+        {% csrf_token %}
+        <div id="map"></div>
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+        <button type="submit">Save Location</button>
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var map = L.map('map').setView([40.712776, -74.005974], 12);  // Default to NYC
+
+            // Add a tile layer (map background) from OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Draggable marker that stores latitude and longitude
+            var marker = L.marker([40.712776, -74.005974], {draggable: true}).addTo(map);
+
+            // Update hidden inputs when marker is moved
+            marker.on('dragend', function(e) {
+                document.getElementById('latitude').value = marker.getLatLng().lat;
+                document.getElementById('longitude').value = marker.getLatLng().lng;
+            });
+        });
+    </script>
+</body>
+</html>

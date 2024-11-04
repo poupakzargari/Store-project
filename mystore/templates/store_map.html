@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Store Map</title>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h2>Find Stores on the Map</h2>
+    <div id="map"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var map = L.map('map').setView([40.712776, -74.005974], 10);  // Default center NYC
+
+            // Add tile layer from OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Data for stores passed from Django
+            var stores = {{ stores|safe }};
+
+            stores.forEach(function(store) {
+                L.marker([parseFloat(store.latitude), parseFloat(store.longitude)])
+                    .addTo(map)
+                    .bindPopup("<b>" + store.store_name + "</b><br>" + store.address);
+            });
+        });
+    </script>
+</body>
+</html>

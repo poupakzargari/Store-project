@@ -17,7 +17,11 @@ urlpatterns = [
     path('category/<str:foo>', views.category, name='category'),
     path('category_summary/', views.category_summary, name='category_summary'),
     path('search/', views.search, name='search'),
-
+    path('store_page/', views.store_page, name='store_page'),
+    path('set_store_location', views.set_store_location, name='set_store_location'),
+    path('store_map', views.store_map, name='store_map'),
+    # path('store/<int:pk>/', views.StoreDetailView.as_view(), name='store-detail'),
+    # path('store/manage/', views.ManageStoreView.as_view(), name='manage-store'),  # For sellers to manage their stores
 ]
 
 
