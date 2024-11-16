@@ -5,19 +5,27 @@
 <header class="bg-dark py-5">
     <div class="container px-4 px-lg-5 my-5">
         <div class="text-center text-white">
-            <h1 class="display-4 fw-bolder">{{ store.store_name }}</h1>
+            <h1 class="display-4 fw-bolder">{{ store.store_name }}'s Profile</h1>
         </div>
     </div>
 </header>
 
 <body>
-    <p>{{ store.description }}</p>
-    <h2>Products</h2>
-    <ul>
-        {% for product in products %}
-            <li>{{ product.name }} - {{ product.price }}</li>
-        {% endfor %}
-    </ul>
+    <h3>Products</h3>
+    <div class="product-list">
+      {% for product in products %}
+        <div class="product-item">
+          <h4>{{ product.name }}</h4>
+          <p>{{ product.description }}</p>
+          <p>Price: ${{ product.price }}</p>
+          {% if product.is_sale %}
+            <p>Sale Price: ${{ product.sale_price }}</p>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p>No products available.</p>
+      {% endfor %}
+    </div>
 </body>
 
 

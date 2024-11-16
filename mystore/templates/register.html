@@ -3,6 +3,16 @@
 
 <!-- Header-->
 <header class="bg-dark py-5">
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <div class="container px-4 px-lg-5 my-5">
         <div class="text-center text-white">
             <h1 class="display-4 fw-bolder">REGISTER</h1>
@@ -11,11 +21,165 @@
     </div>
 </header>
 
-<form method="POST" action="{% url 'register' %}">
-    {% csrf_token %}
+<!-- register.html -->
+<!-- <form method="post" action="{% url 'register' %}"> -->
+    <!-- {% csrf_token %}
+    {{ form.as_p }} -->
+    <!-- {% csrf_token %} -->
+    <!-- Hidden inputs for latitude and longitude -->
+    <!-- <input type="hidden" id="latitude" name="latitude" value="">
+    <input type="hidden" id="longitude" name="longitude" value=""> -->
 
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-secondary">Register</button>
+
+    
+    <!-- <div id="map" style="height: 400px; width: 100%;"></div>
+    
+    <button type="submit">Register</button>
+</form> -->
+
+<!-- Include Leaflet CSS & JS -->
+<!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> -->
+
+<!-- <script>
+    // JavaScript for Role-Based Field Display
+    document.getElementById("id_role").addEventListener("change", function() {
+        var role = this.value;
+        var storeFields = document.getElementById("storeFields");
+        var customerFields = document.getElementById("customerFields");
+
+        if (role === "store") {
+            storeFields.style.display = "block";
+            customerFields.style.display = "none";
+        } else if (role === "customer") {
+            customerFields.style.display = "block";
+            storeFields.style.display = "none";
+        } else {
+            storeFields.style.display = "none";
+            customerFields.style.display = "none";
+        }
+    });
+    // JavaScript for map
+    document.addEventListener("DOMContentLoaded", function() {
+        const defaultLat = 0;
+        const defaultLng = 0;
+        const map = L.map('map').setView([defaultLat, defaultLng], 10);
+    
+        // Add tile layer to map
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    
+        // Add a draggable marker
+        let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    
+        // Update hidden fields and log to console when marker is dragged
+        marker.on('dragend', function(e) {
+            const position = marker.getLatLng();
+            document.getElementById('latitude').value = position.lat;
+            document.getElementById('longitude').value = position.lng;
+            
+            // Log to check if values are correctly set
+            console.log("Latitude set to:", position.lat);
+            console.log("Longitude set to:", position.lng);
+        });
+    });
+    </script> -->
+
+
+<!-- register.html -->
+<form method="POST" id="registerForm">
+    {% csrf_token %}
+    {{ form.username.label_tag }} {{ form.username }}
+    {{ form.email.label_tag }} {{ form.email }}
+    {{ form.password1.label_tag }} {{ form.password1 }}
+    {{ form.password2.label_tag }} {{ form.password2 }}
+    {{ form.phone.label_tag }} {{ form.phone }}
+    {{ form.role.label_tag }} {{ form.role }}
+
+    <!-- Store-Specific Fields -->
+    <div id="storeFields" style="display: none;">
+        {{ form.store_name.label_tag }} {{ form.store_name }}
+        {{ form.address.label_tag }} {{ form.address }}
+    </div>
+
+    <!-- Customer-Specific Fields -->
+    <div id="customerFields" style="display: none;">
+        {{ form.address.label_tag }} {{ form.address }}
+    </div>
+
+    <!-- Map Section -->
+    <div id="mapSection" style="display: none;">
+        <h3>Select Location on Map</h3>
+        <div id="map" style="height: 400px; width: 100%;"></div>
+    </div>
+
+    {{ form.latitude }}
+    {{ form.longitude }}
+
+    <button type="submit">Register</button>
+
 </form>
+
+<script>
+    document.getElementById("id_role").addEventListener("change", function() {
+        var role = this.value;
+        var storeFields = document.getElementById("storeFields");
+        var customerFields = document.getElementById("customerFields");
+        var mapSection = document.getElementById("mapSection");
+
+        // Show relevant fields based on the role selected
+        if (role === "store") {
+            storeFields.style.display = "block";
+            customerFields.style.display = "none";
+            mapSection.style.display = "block";  // Show map for store
+            initMap();
+        } else if (role === "customer") {
+            customerFields.style.display = "block";
+            storeFields.style.display = "none";
+            mapSection.style.display = "block";  // Show map for customer
+            initMap();
+        } else {
+            storeFields.style.display = "none";
+            customerFields.style.display = "none";
+            mapSection.style.display = "none";
+        }
+    });
+
+    function initMap() {
+        // Initialize map (OpenLayers/Leaflet/Mapbox)
+        // Only initialize map once
+        if (window.mapInitialized) return;
+        window.mapInitialized = true;
+
+        var map = L.map('map').setView([0, 0], 2);  // Centered initially on (0,0)
+
+        // Use Mapbox/OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        var marker;
+
+        // Event listener to place marker and capture lat/lon
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lon = e.latlng.lng;
+
+            // Remove previous marker if it exists
+            if (marker) {
+                map.removeLayer(marker);
+            }
+
+            // Place marker at the clicked location
+            marker = L.marker([lat, lon]).addTo(map);
+            
+            // Set form inputs
+            document.getElementById("id_latitude").value = lat;
+            document.getElementById("id_longitude").value = lon;
+        });
+    }
+</script>
 
 {% endblock %}

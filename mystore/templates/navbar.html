@@ -36,11 +36,10 @@
                                 <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'logout' %}">Logout</a></li>
                                 <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'posting-product' %}">Post product</a></li>
                                 <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'update_user' %}">Profile</a></li>
-                                {% if user.profile.role == 'store' %}
-                                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'store_page' %}">Store Profile</a></li>
-                                {% else %}
+                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'store_map' %}">Map</a></li>
+                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'store_page' request.user.store.id %}">Store page</a></li>
+                                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'set_store_location' %}">Store Location</a></li>
                                     <!-- <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'update_user' %}">Profile</a></li> -->
-                                {% endif %}
                             {% else %}
                                 <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'login' %}">Login</a></li>
                                 <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'register' %}">Register</a></li>

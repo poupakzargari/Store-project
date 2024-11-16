@@ -5,10 +5,11 @@ from django.contrib.auth.models import User
 from django.contrib import messages 
 from .forms import SignUpForm, PostingProducts, UpdateUserForm, ChangePasswordForm, UserInfoForm
 from django.db.models import Q
+from django.contrib.auth.forms import AuthenticationForm
 import json
 from cart.cart import Cart
 from geopy.distance import geodesic
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, HttpResponse
 from django.db import transaction
@@ -17,28 +18,42 @@ from django.db import transaction
 # from .models import Store
 
 
-@login_required
 def store_map(request):
     stores = Store.objects.exclude(latitude__isnull=True, longitude__isnull=True)
     return render(request, 'store_map.html', {'stores':stores})
 
 
-@login_required
 def set_store_location(request):
-    if request.method == "GET":
-        return render(request, 'store_location.html')
-    elif request.method == "POST":
+    try:
+        store = Store.objects.get(user=request.user)
+    
+    except Store.DoesNotExist:
+        return HttpResponse("Store does not exist for this user", status=404)
+
+
+
+    if request.method == "POST":
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
 
-    try:
-        store = Store.objects.get(user=request.user)
-        store.latitude = latitude
-        store.longitude = longitude
-        store.save()
-        return redirect('update_user')
-    except store.DoesNotExist:
-        return HttpResponse("Store does not exist for this user", status=404)
+        if latitude and longitude:
+            store.latitude = latitude
+            store.longitude = longitude
+            store.save()
+        return redirect('register')  # Redirect to store profile after saving
+    
+    # initial_latitude = store.latitude if store.latitude else 36.5621309
+    # initial_longitude = store.longitude if store.longitude else 53.0537602
+    
+
+
+    context = {
+        'initial_latitude': store.latitude if store else None,
+        'initial_longitude': store.longitude if store else None,
+        'store_name': store.store_name if store else 'Your Store' 
+    }
+    
+    return render(request, 'store_location.html')
 
 
 
@@ -91,8 +106,6 @@ def update_info(request):
 def category_summary(request):
     categories = Category.objects.all()
     return render(request, 'category_summary.html',  {"categories":categories})
-
-
 
 
 def update_password(request):
@@ -165,8 +178,10 @@ def category(request, foo):
 
 
 def home(request):
-    products = Product.objects.all()
-    return render(request, 'home.html', {'products':products})
+    # products = Product.objects.all()
+    # return render(request, 'home.html', {'products':products})
+    stores = Store.objects.all()  # Or get the specific store associated with the user
+    return render(request, 'home.html', {'stores': stores})
 
 
 def about(request):
@@ -177,23 +192,37 @@ def product(request, pk):
     product = Product.objects.get(id=pk)
     return render(request, 'product.html', {'product':product})
 
+def profile_under_review(request):
+    return render(request, 'profile_under_review.html')
+
 
 @login_required
-def store_page(request):
-    if request.user.profile.role != 'store':
-        return HttpResponseForbidden("You do not have access to this page.")
+def store_page(request, store_id):
+# Fetch the store object
+    store = get_object_or_404(Store, id=store_id)
     
-    # Logic for the store's page
-    return render(request, 'store_page.html')
+    # Fetch products linked to this store
+    products = Product.objects.filter(store=store)
 
+    # Render the template for the store page
+    return render(request, 'store_page.html', {
+        'store': store,
+        'products': products
+    })
 
 @login_required
 def posting_product(request):
-
+    # Check if user is an approved store
     try:
-        if request.user.profile.role != 'store':
-            return HttpResponseForbidden("You don't have permission to post products!")
-    except Profile.DoesNotExist:
+        profile = Profile.objects.get(user=request.user)
+        store = Store.objects.get(user=request.user)
+
+        if profile.role != 'store' or not profile.is_approved:
+            messages.error(request, "Only approved stores can post products.")
+            return redirect('home')
+
+    except (Profile.DoesNotExist, Store.DoesNotExist):
+        messages.error(request, "Only approved stores can post products.")
         return redirect('home')
     
 
@@ -223,7 +252,8 @@ def posting_product(request):
             new_product.save()
             print("Product saved")
             # messages.success(request, ("You have submitted a product successfuly"))
-            return redirect('store_page')
+            messages.success(request, "Product posted successfully!")
+            return redirect('store_profile', store_id=store.id)  # Redirect to store profile
         
         
         else:
@@ -242,18 +272,22 @@ def register_user(request):
     form = SignUpForm()
     if request.method == 'POST':
         form = SignUpForm(request.POST)
-    # Do all these steps to register the user
-        # form = SignUpForm(request.POST)
+        
         if form.is_valid():
+            # Create the User, Profile, Customer or Store as before
             user = form.save(commit=False)
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
             email = form.cleaned_data['email']
             phone = form.cleaned_data['phone']
+            store_name = form.cleaned_data['store_name']
+            address = form.cleaned_data['address']
+            latitude = form.cleaned_data.get('latitude')
+            longitude = form.cleaned_data.get('longitude')
 
             u = User.objects.create_user(
-                username = username,
-                password = password,
+                username=username,
+                password=password,
                 email=email,
             )
             u.refresh_from_db()
@@ -265,28 +299,71 @@ def register_user(request):
 
             if p.role == 'customer':
                 c = Customer(user=u, email=email, phone=phone)
+                c.latitude = latitude
+                c.longitude = longitude
+                c.address = address
                 c.save()
 
-            if p.role == 'store':
-                s = Store(user=u)
+            # Only create a store instance if the user is a store owner
+            if role == 'store':
+                s = Store.objects.create(user=u)
+                s.latitude = latitude
+                s.longitude = longitude
+                s.address = address
+                s.store_name = store_name
                 s.save()
-            
 
-            # log in user
-            user = authenticate(username=username, password=password)
-            if user:
-                login(request, user)
-                messages.success(request, ("Username Created - Please Fill Out Your User Info Below..."))
-                return redirect('home')
+            
+            # Send a success message
+            if role == 'store':
+                messages.success(request, "Registration successful. Your profile is under review.")
+                return redirect('profile_under_review')
             else:
-                messages.error(request, 'Authentication failed.')
-        else:   
-            messages.success(request, ("Whoops!!!"))
-            return redirect('register')
-    else:
-        # Just show them the page
-        return render(request, 'register.html', {'form':form})
+                messages.success(request, "Registration successful. You can log in now.")
+                # Log in the user
+                user = authenticate(username=username, password=password)
+                if user:
+                    login(request, user)
+                    messages.success(request)
+                    return redirect('home')
+                else:
+                    messages.error(request, 'Authentication failed.')
+            return redirect('home')
     
+    return render(request, 'register.html', {'form': form})
+## It was commented before and don't uncomment it
+    #         if p.role == 'store':
+    #             s = Store(user=u, store_name=store_name)
+                
+    #             # Debug latitude and longitude from the POST request
+    #             latitude = request.POST.get('latitude')
+    #             longitude = request.POST.get('longitude')
+    #             print("Latitude received in POST:", latitude)
+    #             print("Longitude received in POST:", longitude)
+                
+    #             # If latitude and longitude are provided, save them to the store instance
+    #             if latitude and longitude:
+    #                 s.latitude = latitude
+    #                 s.longitude = longitude
+    #                 s.save()
+    #             else:
+    #                 print("Latitude or Longitude missing in POST data")
+
+    #         # Log in the user
+    #         user = authenticate(username=username, password=password)
+    #         if user:
+    #             login(request, user)
+    #             messages.success(request, "Username Created - Please Fill Out Your User Info Below...")
+    #             return redirect('home')
+    #         else:
+    #             messages.error(request, 'Authentication failed.')
+
+    #     else:
+    #         messages.success(request, "Whoops!!!")
+    #         return redirect('register')
+    # else:
+    #     return render(request, 'register.html', {'form': form})
+
 
 def login_user(request):
     if request.method == "POST":
@@ -327,6 +404,27 @@ def login_user(request):
         
     else:
         return render(request, 'login.html', {})
+    
+
+def custom_login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            try:
+                profile = Profile.objects.get(user=user)
+                if profile.role == 'store' and not profile.is_approved:
+                    messages.error(request, "Your profile is under review. Please wait for approval.")
+                    return redirect('profile_under_review')
+                else:
+                    login(request, user)
+                    return redirect('home')
+            except Profile.DoesNotExist:
+                messages.error(request, "Profile not found.")
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'login.html', {'form': form})
 
     
 def logout_user(request):

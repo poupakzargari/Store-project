@@ -41,6 +41,7 @@ class Profile(models.Model):
     zipcode = models.CharField(max_length=200, blank=True)
     country = models.CharField(max_length=200, blank=True)
     old_cart = models.CharField(max_length=200, blank=True, null=True)
+    is_approved = models.BooleanField(default=False)  # New field for approval status
 
     def __str__(self):
         return self.user.username
@@ -69,7 +70,9 @@ class Customer(models.Model):
     last_name = models.CharField(max_length=50)
     phone = models.CharField(max_length=20, default='', blank=True)
     email = models.EmailField(max_length=100)
-    # password = models.CharField(max_length=100)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'

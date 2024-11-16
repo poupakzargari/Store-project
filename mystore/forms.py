@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from django import forms
-from .models import Product, Profile, Customer, Store
+from .models import Product, Profile, Customer, Store, Category
 
 
 class UserInfoForm(forms.ModelForm):
@@ -82,38 +82,81 @@ class UpdateUserForm(UserChangeForm):
 	
 
 class SignUpForm(UserCreationForm):
-	# email = forms.EmailField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Email Address'}))
-	# first_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'First Name'}))
-	# last_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Last Name'}))
+	# # email = forms.EmailField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Email Address'}))
+	# # first_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'First Name'}))
+	# # last_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Last Name'}))
 
 
-	email = forms.EmailField(required=True)
-	phone = forms.CharField(required=True)
+	# email = forms.EmailField(required=True)
+	# phone = forms.CharField(required=True)
 
+	# ROLE_CHOICES = (
+	# 	('store', 'Store'),
+	# 	('customer', 'Customer'),
+	# )
+	# # role = forms.ChoiceField(label="", widget=forms.Select(), required=True)
+	# role = forms.ChoiceField(choices=ROLE_CHOICES, widget=forms.RadioSelect, required=True)
+	# store_name = forms.CharField(required=True)
+
+	# class Meta:
+	# 	model = User
+	# 	fields = ['username', 'email', 'password1', 'password2', 'role', 'phone']
+
+	# if role == 'store':
+	# 	fields = ['username', 'email', 'password1', 'password2', 'role', 'store name', 'phone']
+
+	# def save(self, commit=True):
+	# 	user = super().save(commit=False)
+	# 	user.email = self.cleaned_data['email']
+	# 	if commit:
+	# 		user.save()
+	# 		phone = self.cleaned_data['phone']
+	# 		profile = Profile.objects.create(user=user, role=self.cleaned_data['role'])
+	# 		profile.save()
+	# 		# customer.phone = self.cleaned_data['phone']
+	# 		# customer = Customer.objects.create(user=user, phone=self.cleaned_data['phone'])
+	# 		# customer.save()
+			
+		# return user
+
+	username = forms.CharField(max_length=100)
+	email = forms.EmailField()
+	password1 = forms.CharField(widget=forms.PasswordInput)
+	password2 = forms.CharField(widget=forms.PasswordInput)
+	phone = forms.CharField(max_length=20)
+    
+    # Role field
 	ROLE_CHOICES = (
-		('store', 'Store'),
+		('', 'Select Role'),  # Placeholder choice
 		('customer', 'Customer'),
+		('store', 'Store'),
 	)
-	# role = forms.ChoiceField(label="", widget=forms.Select(), required=True)
-	role = forms.ChoiceField(choices=ROLE_CHOICES, widget=forms.RadioSelect, required=True)
+	role = forms.ChoiceField(choices=ROLE_CHOICES, required=True)
+    
+    # Conditional fields
+	address = forms.CharField(max_length=255, required=False)
+	store_name = forms.CharField(max_length=100, required=False)
+	latitude = forms.FloatField(required=False, widget=forms.HiddenInput())
+	longitude = forms.FloatField(required=False, widget=forms.HiddenInput())
 
 	class Meta:
 		model = User
-		fields = ['username', 'email', 'password1', 'password2', 'role', 'phone']
+		fields = ['username', 'email', 'password1', 'password2', 'phone', 'role']
 
-	def save(self, commit=True):
-		user = super().save(commit=False)
-		user.email = self.cleaned_data['email']
-		if commit:
-			user.save()
-			phone = self.cleaned_data['phone']
-			profile = Profile.objects.create(user=user, role=self.cleaned_data['role'])
-			profile.save()
-			# customer.phone = self.cleaned_data['phone']
-			# customer = Customer.objects.create(user=user, phone=self.cleaned_data['phone'])
-			# customer.save()
-			
-		return user
+	def clean(self):
+		cleaned_data = super().clean()
+		password1 = cleaned_data.get("password1")
+		password2 = cleaned_data.get("password2")
+		role = cleaned_data.get("role")
+		
+		if password1 and password2 and password1 != password2:
+			self.add_error('password2', "Passwords do not match.")
+		
+		# Validation for role-specific fields
+		if role == 'store' and not cleaned_data.get("store_name"):
+			self.add_error('store_name', "Store name is required for store role.")
+		if role == 'customer' and not cleaned_data.get("address"):
+			self.add_error('address', "Address is required for customer role.")
 
 
 class PostingProducts(forms.ModelForm):
@@ -135,5 +178,19 @@ class PostingProducts(forms.ModelForm):
 		model = Product
 		fields = ('name', 'description', 'image', 'price')
 
+	# class Meta:
+	# 	model = Product
+	# 	fields = ['name', 'description', 'price', 'image', 'category', 'is_sale', 'sale_price']
+	# 	widgets = {
+	# 		'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Name'}),
+	# 		'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
+	# 		'price': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Price'}),
+	# 		'image': forms.FileInput(attrs={'id': 'image_field'}),
+	# 		'category': forms.Select(attrs={'class': 'form-control'}),
+	# 		'is_sale': forms.CheckboxInput(),
+	# 		'sale_price': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sale Price'}),
+	# 	}
 
-
+	# def __init__(self, *args, **kwargs):
+	# 	super(PostingProducts, self).__init__(*args, **kwargs)
+	# 	self.fields['category'].queryset = Category.objects.all()  # List all categories

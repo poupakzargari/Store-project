@@ -12,13 +12,6 @@
 </header>
 
 
-<!-- <h1>Add Product details</h1>
-<form method="post">
-{% csrf_token %}
-{{ form.as_p }}
-<button type="submit">Add Product</button>
-</form> -->
-
 <form method="POST" action="{% url 'posting-product' %}" enctype="multipart/form-data">
   {% csrf_token %}
 
