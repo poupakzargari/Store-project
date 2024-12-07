@@ -1,37 +1,157 @@
+{% extends 'base.html' %}
+{% block content %}
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Map</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
     <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2rem;
+            color: #2C3E50;
+        }
+
+        /* Map Styling */
         #map {
-            height: 500px;
-            width: 100%;
+            width: 90%;
+            height: 600px;
+            margin: 0 auto;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Tooltip Styling */
+        .store-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495E;
+            background-color: white;
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Popup Styling */
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .leaflet-popup-content {
+            font-size: 14px;
+            text-align: center;
+            color: #2C3E50;
+        }
+
+        .leaflet-popup-content a {
+            color: #3498DB;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .leaflet-popup-content a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <h2>Find Stores on the Map</h2>
     <div id="map"></div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var map = L.map('map').setView([40.712776, -74.005974], 10);  // Default center NYC
-
-            // Add tile layer from OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Data for stores passed from Django
-            var stores = {{ stores|safe }};
-
-            stores.forEach(function(store) {
-                L.marker([parseFloat(store.latitude), parseFloat(store.longitude)])
-                    .addTo(map)
-                    .bindPopup("<b>" + store.store_name + "</b><br>" + store.address);
-            });
-        });
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script id="stores_data" type="application/json">
+        {{ stores|safe }}
     </script>
-</body>
+    <script>
+        // Initialize the map, centered on Iran
+        const map = L.map('map').setView([32.4279, 53.6880], 6); // Default view over Iran
+    
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    
+        // Retrieve store data from the template context
+        const stores = JSON.parse('{{ stores_json|escapejs }}');
+    
+        // Define a function to create a store icon based on type
+function createStoreIcon(type, size) {
+    // Map store types to icon image paths
+    const iconPaths = {
+        'supermarket': '/static/images/supermarket.png',
+        'cafe': '/static/images/cafe.png',
+        'stationary': '/static/images/stationary.png',
+        'home_decor': '/static/images/home_decor.png',
+        'default': '/static/images/store.png'
+    };
+
+    // Get the correct icon URL or fallback to default
+    const iconUrl = iconPaths[type] || iconPaths['default'];
+
+    return L.icon({
+        iconUrl: iconUrl,
+        iconSize: size, // Icon size
+        iconAnchor: [size[0] / 2, size[1]], // Anchor at bottom center
+        popupAnchor: [0, -size[1]] // Popup offset above the marker
+    });
+}
+
+// Add a marker for each store
+stores.forEach(store => {
+    if (store.latitude && store.longitude) {
+        const marker = L.marker([store.latitude, store.longitude], {
+            icon: createStoreIcon(store.type, [32, 32]) // Pass the store type here
+        }).addTo(map);
+
+        // Add tooltip and popup as before
+        marker.bindTooltip(store.store_name, {
+            permanent: true,
+            direction: 'bottom',
+            offset: [0, 10],
+            className: 'store-label'
+        }).openTooltip();
+
+        marker.bindPopup(`
+            <div>
+                <strong>${store.store_name}</strong><br>
+                ${store.address}<br>
+                <a href="${store.store_profile_url}" target="_blank">View Store</a>
+            </div>
+        `);
+
+        marker.on('click', () => {
+            window.location.href = store.store_profile_url;
+        });
+    }
+});
+     
+        // Listen for zoom level changes
+        map.on('zoomend', () => {
+            addMarkers();
+        });
+    
+        // Add markers initially based on the starting zoom level
+        addMarkers();
+    </script>
+    
+    </body>
 </html>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Header-->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">Stores</h1>
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Store List</title>
+            </head>
+            <body>
+                <h1>List of Stores</h1>
+                <ul>
+                    {% if stores %}
+                        {% for store in stores %}
+                            <li>
+                                <a href="{% url 'store_page' store.id %}">{{ store.store_name }}</a>
+                                <p>Address: {{ store.address }}</p>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <p>No approved stores are currently available.</p>
+                    {% endif %}
+                </ul>
+            </body>
+            </html>
+            
+    </div>
+</header>
+
+
+{% endblock %}

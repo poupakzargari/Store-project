@@ -3,18 +3,30 @@ import datetime
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.urls import reverse
 
     
 class Store(models.Model):
+    STORE_KINDS = [
+        ('supermarket', 'Supermarket'),
+        ('cafe', 'Cafe'),
+        ('stationary', 'Stationary Store'),
+        ('home_decor', 'Home Decor Store'),
+        # Add more types as needed
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     store_name = models.CharField(max_length=100, blank=True)
     address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)  # City field for the store
     latitude = models.FloatField(default=0.0, blank=True)
     longitude = models.FloatField(default=0.0, blank=True)
+    profile_picture = models.ImageField(upload_to='uploads/store/profile_pictures/', blank=True, null=True)
+    billboard_picture = models.ImageField(upload_to='uploads/store/billboard_pictures/', blank=True, null=True)
+    store_kind = models.CharField(max_length=50, choices=STORE_KINDS, default='store', blank=False, null=False)
 
     def __str__(self): 
         return self.store_name
-
 
 
 class Profile(models.Model):
@@ -73,6 +85,9 @@ class Customer(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     address = models.CharField(max_length=255, blank=True)
+    postal_code = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)  # City field
+
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
@@ -81,7 +96,7 @@ class Customer(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=50)
     price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True)
     description = models.CharField(max_length=250, default='', blank=True, null=True)
     image = models.ImageField(upload_to='uploads/product/')
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='products', null=True)
@@ -90,19 +105,17 @@ class Product(models.Model):
     is_sale = models.BooleanField(default=False)
     sale_price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
     
-
-    def __str__(self):
-        return self.name
+    def get_absolute_url(self):
+            return reverse('product', args=[str(self.pk)])
 
 
 # Customer Orders
 class Order(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
-    address = models.CharField(max_length=100, default='', blank=True)
-    phone = models.CharField(max_length=20, default='', blank=True)
-    date = models.DateField(default=datetime.datetime.today)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders', blank=True, null=True)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='orders', blank=True, null=True)
+    delivery_system = models.CharField(max_length=50, blank=True)  # Will hold "Delivery System 1" or "Delivery System 2"
+    created_at = models.DateTimeField(blank=True, null=True)
     status = models.BooleanField(default=False)
     
     def __str__(self):

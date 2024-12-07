@@ -1,130 +1,203 @@
 {% load static %}
+<!-- Main Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-light">
+    <div class="container px-4 px-lg-5">
+        <!-- Brand -->
+        <a class="navbar-brand" href="{% url 'home' %}" style="color: black;">Maple</a>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container px-4 px-lg-5">
-                <a class="navbar-brand" href="#!">Start Bootstrap</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <form method="POST" action="{% url 'search' %}" style="width: 80%;">
-                        {% csrf_token %}
-                        <form>
-                            <div class="form-group">
-                              <input type="text" class="form-control" placeholder="Do your search">
-                            </div>
-                
-                            <!-- <button type="submit" class="btn btn-secondary">Search</button> -->
-                          </form>
-                      </form>
-                    <div style="width: 6%;">
+        <!-- Navbar Toggler -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-                    </div>
-                    <form class="d-flex" style="width: 20%;">
-                        <a href="{% url 'cart_summary' %}" class="btn btn-outline-dark">
-                            <i class="bi-cart-fill me-1"></i>
-                            Cart
-                        <span class="badge bg-dark text-white ms-1 rounded-pill" id="cart_quantity">{{ cart | length }}</span>
-                        </a>        
-                    </form>
+        <div class="position-relative">
+            <!-- Include Search Bar -->
+            <form class="d-flex" style="margin: 20px;">
+                <input class="form-control me-2" style="width: 900px;" type="search" id="searchInput" placeholder="Search products or categories" aria-label="Search">
+            </form>
+
+            <div id="searchResults" style="display:none; margin-top:20px;">
+                <div id="productResults">
+                    <h4>Products</h4>
+                    <ul id="productList" style="list-style-type: none; padding: 0;"></ul>
+                </div>
+                <div id="categoryResults" style="margin-top: 20px;">
+                    <h4>Categories</h4>
+                    <ul id="categoryList" style="list-style-type: none; padding: 0;"></ul>
                 </div>
             </div>
-        </nav>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container px-4 px-lg-5" style="color: white;">
-                        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                            <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a></li>
-                            {% if user.is_authenticated %}
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'logout' %}">Logout</a></li>
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'posting-product' %}">Post product</a></li>
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'update_user' %}">Profile</a></li>
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'store_map' %}">Map</a></li>
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'store_page' request.user.store.id %}">Store page</a></li>
-                                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'set_store_location' %}">Store Location</a></li>
-                                    <!-- <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'update_user' %}">Profile</a></li> -->
-                            {% else %}
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'login' %}">Login</a></li>
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'register' %}">Register</a></li>
-                            {% endif %}
-                                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'search' %}">Search</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#/" role="button" data-bs-toggle="dropdown" aria-expanded="false">Categories</a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <li><a class="dropdown-item" href="{% url 'home' %}">All Products</a></li>
-                                        <li><hr class="dropdown-divider" /></li>
-                                        <li><a class="dropdown-item" href="{% url 'category' 'Programming-Books' %}">Programming Books</a></li>
-                                        <li><a class="dropdown-item" href="{% url 'category' 'Marketing-Books' %}">Marketing Books</a></li>
-                                    </ul>
-                            </li>
-                        </ul>
-                      </div>
-                    </div>
-                    </nav>
+        </div>
+        
 
 
-<!-- Navigation-->
-        <!-- <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container px-4 px-lg-5">
-                <a class="navbar-brand" href="{% url 'home' %}">Codemy Ecommerce</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
+            <!-- Cart -->
+            <a href="{% url 'cart_summary' %}" class="btn btn-outline-dark ms-3">
+                <i class="bi bi-cart-fill me-1"></i>
+                <span class="badge bg-dark text-white ms-1 rounded-pill">{{ cart|length }}</span>
+            </a>
+        </div>
+    </div>
+</nav>
 
-            {% if user.is_authenticated %}
-              
-   <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Profile</a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'update_user' %}">User Profile</a></li>
-                <li><hr class="dropdown-divider" /></li>
-<li><a class="dropdown-item" href="{% url 'update_info'  %}">User Info</a></li>
-                            </ul>
+<!-- Secondary Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-dark">
+    <div class="container px-4 px-lg-5">
+        <div class="collapse navbar-collapse">
+            <!-- Links Section -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active text-primary{% endif %}" href="{% url 'home' %}">Home</a>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'logout' %}active text-primary{% endif %}" href="{% url 'logout' %}">Logout</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'posting_product' %}active text-primary{% endif %}" href="{% url 'posting_product' %}">Post Product</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'update_user' %}active text-primary{% endif %}" href="{% url 'update_user' %}">Profile</a>
+                    </li>
+                    {% if user.profile.role == 'store' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'store_page' %}active text-primary{% endif %}" href="{% url 'store_page' request.user.store.id %}">Store Page</a>
                         </li>
-            {% if user.is_superuser %}
-              <li class="nav-item dropdown">
-            
-            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Orders</a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><hr class="dropdown-divider" /></li>
-                            </ul>
-                        </li>
-            {% endif %}
+                        <!-- <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'set_store_location' %}active text-primary{% endif %}" href="{% url 'set_store_location' %}">Store Location</a>
+                        </li> -->
+                    {% endif %}
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'login' %}active text-primary{% endif %}" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'register' %}active text-primary{% endif %}" href="{% url 'register' %}">Register</a>
+                    </li>
+                    
+                {% endif %}
 
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'store_map' %}active text-primary{% endif %}" href="{% url 'store_map' %}">Map</a>
+                </li>
 
-               <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
-            {% else %}
-               <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-
-               <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
-
-            {% endif %}
-
-                        
-
-
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Categories</a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="{% url 'category_summary' %}">All Products</a></li>
-                                <li><hr class="dropdown-divider" /></li>
-<li><a class="dropdown-item" href="{% url 'category' 'Programming-Books' %}">Programming Books</a></li>
-                                <li><a class="dropdown-item" href="{% url 'category' 'Marketing-Books' %}">Marketing Books</a></li>
-                            </ul>
-                        </li>
+                <li class="nav-item dropdown"> 
+                    <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'category' %}active text-primary{% endif %}" 
+                       id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Categories
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="{% url 'home' %}">All Products</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% for category in categories %}
+                            <li><a class="dropdown-item" href="{% url 'category' category.id %}">{{ category.name }}</a></li>
+                        {% endfor %}
                     </ul>
-                    <form class="d-flex">
+                </li>
+                
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active text-primary{% endif %}" href="{% url 'about' %}">About</a>
+                </li>
 
-<a href="{% url 'cart_summary' %}" class="btn btn-outline-dark"><i class="bi-cart-fill me-1"></i>
-                            Cart
-<span class="badge bg-dark text-white ms-1 rounded-pill" id="cart_quantity">{{ cart|length }}
+            </ul>
+        </div>
+    </div>
+</nav>
 
-</span></a>
- -->    
+<script src="{% static 'js/scripts.js' %}"></script>
+<script>
+// Elements
+// Elements
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+const productList = document.getElementById('productList');
+const categoryList = document.getElementById('categoryList');
 
-                        
-                    </form>
-                </div>
-            </div>
-        </nav>
+// Event listener for search input
+searchInput.addEventListener('input', function () {
+    const query = this.value.trim();
+
+    // Hide results if query is too short
+    if (query.length < 3) {
+        searchResults.style.display = 'none';
+        return;
+    }
+
+    // Fetch search results
+    fetch(`/search/?q=${encodeURIComponent(query)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Show results container
+            searchResults.style.display = 'block';
+
+            // Clear previous results
+            productList.innerHTML = '';
+            categoryList.innerHTML = '';
+
+            // Display product results
+            if (data.products.length > 0) {
+                data.products.forEach(product => {
+                    const productItem = `
+                        <li>
+                            <a href="${product.url}">
+                                <img src="${product.image}" alt="${product.name}" style="width:50px; margin-right: 10px;">
+                                ${product.name} - $${product.price}
+                            </a>
+                        </li>`;
+                    productList.innerHTML += productItem;
+                });
+            } else {
+                productList.innerHTML = '<li>No products found.</li>';
+            }
+
+            // Display category results
+            if (data.categories.length > 0) {
+                data.categories.forEach(category => {
+                    const categoryItem = `
+                        <li>
+                            <a href="${category.url}">${category.name}</a>
+                        </li>`;
+                    categoryList.innerHTML += categoryItem;
+                });
+            } else {
+                categoryList.innerHTML = '<li>No categories found.</li>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching search results:', error);
+        });
+});
+
+// Prevent hiding when clicking inside search results
+searchResults.addEventListener('mousedown', (event) => {
+    event.preventDefault();
+});
+
+// Hide the results container when input loses focus
+searchInput.addEventListener('blur', () => {
+    setTimeout(() => searchResults.style.display = 'none', 200); // Delay to allow clicks
+});
+
+// Show results again when input gains focus
+searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim().length >= 3) {
+        searchResults.style.display = 'block';
+    }
+});
+
+// Additional safety: Hide results if the input is empty when focused
+searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim().length < 3) {
+        searchResults.style.display = 'none';
+    }
+});
+
+    
+</script>
+</body>
+</html>

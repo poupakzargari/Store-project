@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Search Results</h1>
+    <div>
+        <h2>Products</h2>
+        {% if products %}
+            <ul>
+                {% for product in products %}
+                    <li>
+                        <a href="{% url 'product' product.id %}">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:50px; height:50px;">
+                            {{ product.name }} - ${{ product.price }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No products found.</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <h2>Categories</h2>
+        {% if categories %}
+            <ul>
+                {% for category in categories %}
+                    <li>
+                        <a href="{% url 'category' category.id %}">{{ category.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No categories found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

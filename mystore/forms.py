@@ -20,7 +20,7 @@ class UserInfoForm(forms.ModelForm):
 
 		class Meta:
 			model = Profile
-			fields = ('phone', 'role', 'address1', 'address2', 'city', 'state', 'zipcode', 'country')
+			fields = ('phone', 'role', 'address1', 'address2', 'city', 'state', 'country')
 
 
 
@@ -45,79 +45,82 @@ class ChangePasswordForm(SetPasswordForm):
 
 
 
+from django import forms
+from django.contrib.auth.forms import UserChangeForm
+from .models import User, Store, Profile
 
 
 class UpdateUserForm(UserChangeForm):
+    # Hide Password stuff
+    password = None
 
-	# Hide Password stuff
-	password = None
-	# Get other fields
-	email = forms.EmailField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Email Address'}), required=False)
-	first_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'First Name'}), required=False)
-	last_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Last Name'}), required=False)
+    # Get other fields
+    email = forms.EmailField(
+        label="",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}),
+        required=False
+    )
+    first_name = forms.CharField(
+        label="",
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+        required=False
+    )
+    last_name = forms.CharField(
+        label="",
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+        required=False
+    )
+    phone = forms.CharField(
+        label="",
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'}),
+        required=False
+    )
 
-	phone = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Phone Number'}), required=False)
+    # Store-specific fields
+    profile_picture = forms.ImageField(
+        label="Profile Picture",
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'form-control-file'})
+    )
+    billboard_picture = forms.ImageField(
+        label="Billboard Picture",
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'form-control-file'})
+    )
 
-	class Meta:
-		model = User
-		fields = ('username', 'first_name', 'last_name', 'email')
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email')
 
-		# def save(self, commit=True):
-		# 	user = super().save(commit=False)
-		# 	if commit:
-		# 		customer = Customer.objects.create(first_name=self.cleaned_data['first_name'], last_name=self.cleaned_data['last_name'])
-		# 		customer.save()
-				
-		# 	return user
+    def __init__(self, *args, **kwargs):
+        # Check if the user is a store
+        user_instance = kwargs.get('instance')
+        self.is_store = False
 
+        # Determine role and show/hide fields based on role
+        if user_instance:
+            profile = getattr(user_instance, 'profile', None)
+            if profile and profile.role == 'store':
+                self.is_store = True
 
-	def __init__(self, *args, **kwargs):
-		super(UpdateUserForm, self).__init__(*args, **kwargs)
+        super(UpdateUserForm, self).__init__(*args, **kwargs)
 
-		self.fields['username'].widget.attrs['class'] = 'form-control'
-		self.fields['username'].widget.attrs['placeholder'] = 'User Name'
-		self.fields['username'].label = ''
-		self.fields['username'].help_text = '<span class="form-text text-muted"><small>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</small></span>'
+        # Customize widget attributes
+        self.fields['username'].widget.attrs['class'] = 'form-control'
+        self.fields['username'].widget.attrs['placeholder'] = 'User Name'
+        self.fields['username'].label = ''
+        self.fields['username'].help_text = '<span class="form-text text-muted"><small>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</small></span>'
 
-	
+        # Hide store-specific fields if the user is not a store
+        if not self.is_store:
+            self.fields.pop('profile_picture', None)
+            self.fields.pop('billboard_picture', None)
+
 
 class SignUpForm(UserCreationForm):
-	# # email = forms.EmailField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Email Address'}))
-	# # first_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'First Name'}))
-	# # last_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Last Name'}))
-
-
-	# email = forms.EmailField(required=True)
-	# phone = forms.CharField(required=True)
-
-	# ROLE_CHOICES = (
-	# 	('store', 'Store'),
-	# 	('customer', 'Customer'),
-	# )
-	# # role = forms.ChoiceField(label="", widget=forms.Select(), required=True)
-	# role = forms.ChoiceField(choices=ROLE_CHOICES, widget=forms.RadioSelect, required=True)
-	# store_name = forms.CharField(required=True)
-
-	# class Meta:
-	# 	model = User
-	# 	fields = ['username', 'email', 'password1', 'password2', 'role', 'phone']
-
-	# if role == 'store':
-	# 	fields = ['username', 'email', 'password1', 'password2', 'role', 'store name', 'phone']
-
-	# def save(self, commit=True):
-	# 	user = super().save(commit=False)
-	# 	user.email = self.cleaned_data['email']
-	# 	if commit:
-	# 		user.save()
-	# 		phone = self.cleaned_data['phone']
-	# 		profile = Profile.objects.create(user=user, role=self.cleaned_data['role'])
-	# 		profile.save()
-	# 		# customer.phone = self.cleaned_data['phone']
-	# 		# customer = Customer.objects.create(user=user, phone=self.cleaned_data['phone'])
-	# 		# customer.save()
-			
-		# return user
 
 	username = forms.CharField(max_length=100)
 	email = forms.EmailField()
@@ -131,7 +134,17 @@ class SignUpForm(UserCreationForm):
 		('customer', 'Customer'),
 		('store', 'Store'),
 	)
-	role = forms.ChoiceField(choices=ROLE_CHOICES, required=True)
+
+	STORE_KINDS = (
+		('', 'Select Type'),  # Placeholder choice
+		('supermarket', 'Supermarket'),
+		('home_decor', 'Home_Decor'),
+		('stationary', 'Stationary'),
+		('cafe', 'Cafe'),
+	)
+
+	role = forms.ChoiceField(choices=ROLE_CHOICES)
+	store_kind = forms.ChoiceField(choices=STORE_KINDS)
     
     # Conditional fields
 	address = forms.CharField(max_length=255, required=False)
@@ -141,13 +154,14 @@ class SignUpForm(UserCreationForm):
 
 	class Meta:
 		model = User
-		fields = ['username', 'email', 'password1', 'password2', 'phone', 'role']
+		fields = ['username', 'email', 'password1', 'password2', 'phone', 'role', 'store_kind']
 
 	def clean(self):
 		cleaned_data = super().clean()
 		password1 = cleaned_data.get("password1")
 		password2 = cleaned_data.get("password2")
 		role = cleaned_data.get("role")
+		store_kind = cleaned_data.get("store_kind")
 		
 		if password1 and password2 and password1 != password2:
 			self.add_error('password2', "Passwords do not match.")
@@ -161,36 +175,28 @@ class SignUpForm(UserCreationForm):
 
 class PostingProducts(forms.ModelForm):
 
-	def __init__(self, *args, **kwargs):
-
-		super(PostingProducts, self).__init__(*args, **kwargs)
-
-		self.name = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'First Name'}))
-		self.description = forms.CharField(label="", max_length=600, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Description'}))
-		self.price = forms.DecimalField(label="", decimal_places=2, max_digits=6, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Price'}))
-		# self.category = forms.ForeignKey(Category, on_delete=forms.CASCADE, default=1)
-		# self.category = forms.CharField(label="")
-		self.image = forms.ImageField(widget=forms.FileInput(attrs={"id" : "image_field", "style" : "height: 100px ; width : 100px ; "}))
-		self.sale_price = forms.DecimalField(decimal_places=2, max_digits=6, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Price'}))
-
-
 	class Meta:
 		model = Product
-		fields = ('name', 'description', 'image', 'price')
+		fields = ['name', 'description', 'price', 'image', 'category', 'is_sale', 'sale_price']
+		widgets = {
+			'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Name'}),
+			'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
+			'price': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Price'}),
+			'image': forms.FileInput(attrs={'id': 'image_field'}),
+			'category': forms.Select(attrs={'class': 'form-control'}),
+			'is_sale': forms.CheckboxInput(),
+			'sale_price': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sale Price'}),
+		}
 
-	# class Meta:
-	# 	model = Product
-	# 	fields = ['name', 'description', 'price', 'image', 'category', 'is_sale', 'sale_price']
-	# 	widgets = {
-	# 		'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Name'}),
-	# 		'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
-	# 		'price': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Price'}),
-	# 		'image': forms.FileInput(attrs={'id': 'image_field'}),
-	# 		'category': forms.Select(attrs={'class': 'form-control'}),
-	# 		'is_sale': forms.CheckboxInput(),
-	# 		'sale_price': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sale Price'}),
-	# 	}
+	def __init__(self, *args, **kwargs):
+		super(PostingProducts, self).__init__(*args, **kwargs)
+		self.fields['category'].queryset = Category.objects.all()
 
-	# def __init__(self, *args, **kwargs):
-	# 	super(PostingProducts, self).__init__(*args, **kwargs)
-	# 	self.fields['category'].queryset = Category.objects.all()  # List all categories
+
+class CustomerInfoForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ['first_name', 'last_name', 'phone', 'address', 'city', 'postal_code']
+        widgets = {
+            'address': forms.Textarea(attrs={'rows': 3}),
+        }

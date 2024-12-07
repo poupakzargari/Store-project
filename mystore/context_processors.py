@@ -1,4 +1,6 @@
-# from .models import Store
+from .models import Category
 
-# def available_stores(request):
-#     return {'stores': Store.objects.all()}
+def categories_context(request):
+    # Fetch all categories from the database
+    categories = Category.objects.all()
+    return {'categories': categories}

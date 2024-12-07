@@ -1,20 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!-- Header-->
-<header class="bg-dark py-5">
-    <div class="container px-4 px-lg-5 my-5">
-        <div class="text-center text-white">
-            <h1 class="display-4 fw-bolder">Profile Under Review</h1>
-            <p class="lead fw-normal text-white-50 mb-0">With this shop hompeage template</p>
+
+<!-- Main Content -->
+<section class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <!-- Title -->
+                    <h2 class="text-center text-primary mb-4">Your Profile is Under Review</h2>
+
+                    <!-- Information Text -->
+                    <p class="text-center lead">Thank you for registering as a store owner. Our admin team is currently reviewing your profile. You will be notified once your account is approved and you can start managing your store.</p>
+
+                    <!-- Icon or Image -->
+                    <div class="text-center my-4">
+                        <i class="fas fa-clock fa-3x text-info"></i> <!-- You can replace this with an image -->
+                    </div>
+
+                    <!-- Next Steps or Instructions -->
+                    <p class="text-center text-muted">While your profile is under review, please ensure that your store information is complete and accurate. If you have any questions, feel free to contact our support team.</p>
+
+                    <!-- Go to Dashboard Button -->
+                    <div class="text-center mt-5">
+                        <a href="{% url 'home' %}" class="btn btn-primary btn-lg">Home Page
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</header>
-
-<body>
-    <h2>Your profile is under review</h2>
-    <p>Thank you for registering as a store owner. Our admin team is reviewing your profile. You will be notified once your account is approved.</p>
-</body>
-
+</section>
 
 {% endblock %}

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Customer, Product, Order, Profile
+from .models import Category, Customer, Product, Order, Profile, Store
 from django.contrib.auth.models import User
 
 # Register your models here.
@@ -26,6 +26,12 @@ class UserAdmin(admin.ModelAdmin):
     model = User
     fields = ["username", "first_name", "last_name", "email"]
     inlines = [ProfileInline]
+
+
+@admin.register(Store)
+class StoreAdmin(admin.ModelAdmin):
+    list_display = ['store_name', 'city', 'store_kind']  # Include type in admin display
+    list_filter = ['store_kind', 'city']  # Add filter options for type
 
 # Unregister the default User admin to apply our custom UserAdmin
 admin.site.unregister(User)

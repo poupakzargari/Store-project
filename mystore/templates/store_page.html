@@ -1,32 +1,104 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!-- Header-->
-<header class="bg-dark py-5">
-    <div class="container px-4 px-lg-5 my-5">
-        <div class="text-center text-white">
-            <h1 class="display-4 fw-bolder">{{ store.store_name }}'s Profile</h1>
+
+<head>
+  <style>
+    .billboard {
+        position: relative;
+        margin-bottom: 80px;
+    }
+    .billboard span {
+        font-size: 18px;
+        color: #666;
+    }
+    .profile-picture img, .profile-picture div {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .profile-picture span {
+        font-size: 14px;
+        color: #666;
+    }
+</style>
+
+</head>
+
+<!-- Store Header -->
+<section class="store-header position-relative">
+    <!-- Billboard -->
+    {% if billboard_picture %}
+    <div class="billboard" style="background-image: url('{{ billboard_picture.url }}'); height: 300px; background-size: cover; background-position: center;">
+    {% else %}
+    <div class="billboard" style="background-color: #f0f0f0; height: 300px; display: flex; justify-content: center; align-items: center;">
+        <span class="text-muted">No Billboard Available</span>
+    {% endif %}
+        <div class="container position-relative h-100">
+            <!-- Profile Picture -->
+            {% if profile_picture %}
+            <div class="profile-picture position-absolute" style="bottom: -50px; left: 50%; transform: translateX(-50%);">
+                <img src="{{ profile_picture.url }}" alt="{{ store.store_name }} Profile Picture" 
+                     style="width: 120px; height: 120px; border-radius: 50%; border: 5px solid white;">
+            </div>
+            {% else %}
+            <div class="profile-picture position-absolute" style="bottom: -50px; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; border-radius: 50%; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; border: 5px solid white;">
+                <span class="text-muted">No Profile Picture</span>
+            </div>
+            {% endif %}
         </div>
     </div>
-</header>
+</section>
 
-<body>
-    <h3>Products</h3>
-    <div class="product-list">
-      {% for product in products %}
-        <div class="product-item">
-          <h4>{{ product.name }}</h4>
-          <p>{{ product.description }}</p>
-          <p>Price: ${{ product.price }}</p>
-          {% if product.is_sale %}
-            <p>Sale Price: ${{ product.sale_price }}</p>
-          {% endif %}
-        </div>
-      {% empty %}
-        <p>No products available.</p>
-      {% endfor %}
+<!-- Store Name -->
+<section class="store-info text-center mt-5">
+    <h1 class="display-4 fw-bold">{{ store.store_name }}</h1>
+</section>
+
+<!-- Main Content -->
+<section class="py-5">
+    <div class="container px-4 px-lg-5">
+        {% if grouped_products %}
+            {% for category, products in grouped_products.items %}
+                <!-- Category Header -->
+                <div class="mb-4">
+                    <h2 class="text-left text-primary border-bottom pb-2">{{ category }}</h2>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="row gx-4 gx-lg-5 row-cols-1 row-cols-md-2 row-cols-lg-4">
+                    {% for product in products %}
+                        <div class="col mb-5">
+                            <div class="card h-100 shadow-sm">
+                                <a class="btn btn-light btn-sm" href="{% url 'product' product.id %}">
+                                    <!-- Product Image -->
+                                    <img class="card-img-top" src="{{ product.image.url }}" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                                    
+                                    <!-- Product Details -->
+                                    <div class="card-body text-center">
+                                        <h5 class="fw-bold">{{ product.name }}</h5>
+                                        <p class="small text-muted">{{ product.description|truncatewords:15 }}</p>
+                                        {% if product.is_sale %}
+                                            <div class="text-danger fw-bold">
+                                                <span>Sale Price: ${{ product.sale_price }}</span>
+                                            </div>
+                                            <div class="text-muted text-decoration-line-through">
+                                                <span>Price: ${{ product.price }}</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="text-primary fw-bold">
+                                                <span>Price: ${{ product.price }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center text-muted">No products available.</p>
+        {% endif %}
     </div>
-</body>
-
+</section>
 
 {% endblock %}
