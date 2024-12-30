@@ -11,8 +11,7 @@
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
-                        
-                        <!-- Improved Form Styling -->
+
                         {% for field in form %}
                         <div class="mb-4">
                             <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>

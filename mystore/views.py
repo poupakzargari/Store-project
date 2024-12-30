@@ -15,12 +15,44 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.db import transaction
 from .utils import determine_delivery_system
+from .forms import PostingProducts
 
 
-# Cart Submition stuff
-@login_required
+
+def custom_404_view(request, exception=None):
+    return render(request, '404.html', status=404)
+
+
+# class SubmitCartView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get(self, request):
+#         # Provide pre-filled data if necessary
+#         customer, _ = Customer.objects.get_or_create(user=request.user)
+#         serializer = CustomerSerializer(customer)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+#     def post(self, request):
+#         user = request.user
+#         customer, _ = Customer.objects.get_or_create(user=user)
+#         serializer = CustomerSerializer(customer, data=request.data)
+
+#         if serializer.is_valid():
+#             serializer.save()
+
+#             store = Store.objects.first()
+#             if not store:
+#                 raise ValidationError("No store available.")
+
+#             delivery_system = determine_delivery_system(serializer.validated_data['city'], store.city)
+#             order = Order.objects.create(customer=customer, store=store, delivery_system=delivery_system)
+
+#             return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
 def submit_cart(request):
-    # Check if the customer exists
     customer, created = Customer.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
@@ -29,13 +61,9 @@ def submit_cart(request):
             form.save()
             store = Store.objects.first()
 
-            # Determine delivery system
             delivery_system = determine_delivery_system(customer.city, store.city)
-
-            # Create order
             order = Order.objects.create(customer=customer, store=store, delivery_system=delivery_system)
 
-            # Redirect to a payment page
             return redirect('payment_page', order_id=order.id)
     else:
         form = CustomerInfoForm(instance=customer)
@@ -43,10 +71,37 @@ def submit_cart(request):
     return render(request, 'submit_cart.html', {'form': form})
 
 
-@login_required
+# class PaymentPageView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get(self, request, order_id):
+#         order = get_object_or_404(Order, id=order_id)
+#         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
+
 def payment_page(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     return render(request, 'payment.html', {'order': order})
+
+
+from mystore.models import Product, Category
+from mystore.serializers import ProductSerializer, CategorySerializer
+
+# class SearchView(APIView):
+#     def get(self, request):
+#         query = request.GET.get('q', '').strip()
+#         if not query:
+#             return Response({'error': 'Query parameter is missing or empty'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         products = Product.objects.filter(name__icontains=query)
+#         categories = Category.objects.filter(name__icontains=query)
+
+#         product_data = ProductSerializer(products, many=True).data
+#         category_data = CategorySerializer(categories, many=True).data
+
+#         return Response({
+#             'products': product_data,
+#             'categories': category_data
+#         }, status=status.HTTP_200_OK)
 
 
 
@@ -64,7 +119,7 @@ def search(request):
             'name': product.name,
             'image': product.image.url if product.image else '',
             'price': str(product.price),
-            'url': reverse('product', args=[product.id]),  # Add the product URL
+            'url': reverse('product', args=[product.id]),
         }
         for product in products
     ]
@@ -73,7 +128,7 @@ def search(request):
         {
             'id': category.id,
             'name': category.name,
-            'url': reverse('category', args=[category.id]),  # Add the category URL
+            'url': reverse('category', args=[category.id]),
         }
         for category in categories
     ]
@@ -86,20 +141,17 @@ def search(request):
 
 
 def homepage(request):
-    # Sample billboards (replace with a model if dynamic content is needed)
     billboards = [
         {'image_url': '/static/images/billboard1.png', 'alt_text': 'Best Offer 1'},
         {'image_url': '/static/images/billboard2.png', 'alt_text': 'Best Offer 2'},
         {'image_url': '/static/images/billboard3.png', 'alt_text': 'Best Offer 3'},
     ]
     
-    # Fetch categories with at least one product
     categories_with_products = Category.objects.annotate(product_count=Count('product')).filter(product_count__gt=0)
     
-    # Prepare data for the template
     categories_data = []
     for category in categories_with_products:
-        products = Product.objects.filter(category=category)[:10]  # Limit to 10 products per category
+        products = Product.objects.filter(category=category)[:10]
         categories_data.append({
             'category_name': category.name,
             'products': products,
@@ -111,16 +163,14 @@ def homepage(request):
     })
 
 
-# View to list all approved stores
 def store_list(request):
     stores = Store.objects.filter(user__profile__is_approved=True)
     return render(request, 'store_list.html', {'stores':stores})
 
 
-# View to show a single store's profile and products
 def store_profile(request, store_id):
     store = get_object_or_404(Store, id=store_id, is_approved=True)
-    products = store.products.all() # Getting all the products for this store
+    products = store.products.all()
     return render(request, 'store_page.html', {'store':store, 'products':products})
 
 
@@ -129,17 +179,7 @@ def store_map(request):
         user__profile__is_approved=True 
     )
     
-    # Prepare store data for the map
-    stores_data = [
-        # {
-        #     'latitude': store.latitude,
-        #     'longitude': store.longitude,
-        #     'store_name': store.store_name,
-        #     'address': store.address,
-        #     'store_profile_url': f'/store/{store.id}/',
-        #     'type': store.type  # Include store type
-        # }
-    ]
+    stores_data = []
     for store in stores:
         stores_data.append({
             'id': store.id,
@@ -147,11 +187,10 @@ def store_map(request):
             'address': store.address,
             'latitude': store.latitude,
             'longitude': store.longitude,
-            ''
-            'store_profile_url': reverse('store_page', args=[store.id]),  # Link to store profile
+            'store_profile_url': reverse('store_page', args=[store.id]),
+            'store_kind': store.store_kind 
         })
 
-    # Pass the stores JSON data to the template
     return render(request, 'store_map.html', {'stores_json': json.dumps(stores_data)})
 
 def set_store_location(request):
@@ -162,7 +201,6 @@ def set_store_location(request):
         return HttpResponse("Store does not exist for this user", status=404)
 
 
-
     if request.method == "POST":
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
@@ -171,12 +209,8 @@ def set_store_location(request):
             store.latitude = latitude
             store.longitude = longitude
             store.save()
-        return redirect('register')  # Redirect to store profile after saving
+        return redirect('register')
     
-    # initial_latitude = store.latitude if store.latitude else 36.5621309
-    # initial_longitude = store.longitude if store.longitude else 53.0537602
-    
-
 
     context = {
         'initial_latitude': store.latitude if store else None,
@@ -227,11 +261,9 @@ def category_summary(request):
 def update_password(request):
     if request.user.is_authenticated:
         current_user = request.user
-        # Did they fill out the form
 
         if request.method == 'POST':
             form = ChangePasswordForm(current_user, request.POST)
-            # Is the form valid
             if form.is_valid():
                 form.save()
                 messages.success(request, "Your Password Has Been Updated...")
@@ -258,7 +290,6 @@ def update_user(request):
 
     user_form = UpdateUserForm(instance=request.user)
     
-    # Load current location (store or customer)
     latitude, longitude = None, None
     if hasattr(request.user, 'store'):
         latitude = request.user.store.latitude
@@ -273,7 +304,7 @@ def update_user(request):
         if user_form.is_valid():
             user = user_form.save()
 
-            # Handle location update
+            # Handling location update
             latitude = request.POST.get('latitude')
             longitude = request.POST.get('longitude')
 
@@ -313,12 +344,26 @@ def category_summary(request):
 
 
 def category(request, pk):
-    # Use pk directly (or slug if that's what you're using)
     try:
-        # Look up the category by primary key
-        category = get_object_or_404(Category, pk=pk)  # or replace pk with slug if you're using slugs
+        category = get_object_or_404(Category, pk=pk)
+        sort_order = request.GET.get('sort', 'default')
         products = Product.objects.filter(category=category)
-        return render(request, 'category.html', {'products': products, 'category': category})
+
+
+         # Applying sorting based on query parameter
+        if sort_order == 'price_increasing':
+            products = products.order_by('price')
+        elif sort_order == 'price_decreasing':
+            products = products.order_by('-price')
+        else:
+            products = products.order_by('id')
+
+
+        return render(request, 'category.html', {
+            'category': category,
+            'products': products,
+            'current_sort': sort_order
+        })
         
     except Category.DoesNotExist:
         messages.error(request, "That category doesn't exist")
@@ -326,7 +371,7 @@ def category(request, pk):
 
 
 def base_context(request):
-    categories = Category.objects.all()  # Assuming you have a Category model
+    categories = Category.objects.all()
     return {'categories': categories}
 
 
@@ -336,20 +381,54 @@ def about(request):
 
 def product(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    return render(request, 'product.html', {'product': product})
+    is_owner = product.store.user == request.user
+    return render(request, 'product.html', {'product': product, 'is_owner': is_owner})
+
+
+@login_required
+def edit_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+
+    # Only allow the store owner to edit
+    if product.store.user != request.user:
+        return HttpResponseForbidden("You are not allowed to edit this product.")
+
+    if request.method == 'POST':
+        form = PostingProducts(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect('product', pk=product.pk)
+    else:
+        form = PostingProducts(instance=product)
+
+    return render(request, 'edit_product.html', {'form': form, 'product': product})
+
+
+@login_required
+def delete_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+
+    # Checking ownership
+    if product.store.user != request.user:
+        return JsonResponse({'error': "You are not allowed to delete this product."}, status=403)
+
+    if request.method == 'POST':
+        product.delete()
+        return JsonResponse({'success': True, 'redirect_url': reverse('store_page', args=[product.store.id])})
+
+    return JsonResponse({'error': "Invalid request method."}, status=400)
+
 
 def profile_under_review(request):
     return render(request, 'profile_under_review.html')
 
 
 def store_page(request, store_id):
-    # Get the store
+    # Getting the store
     store = Store.objects.get(id=store_id)
     
-    # Get all products for the store
     products = Product.objects.filter(store=store)
 
-    # Group products by category
     grouped_products = {}
     for product in products:
         category_name = product.category.name if product.category else "Uncategorized"
@@ -367,7 +446,6 @@ def store_page(request, store_id):
 
 @login_required
 def posting_product(request):
-    # Check if user is an approved store
     try:
         profile = Profile.objects.get(user=request.user)
         store = Store.objects.get(user=request.user)
@@ -377,25 +455,22 @@ def posting_product(request):
             return redirect('home')
 
     except (Profile.DoesNotExist, Store.DoesNotExist):
-        messages.error(request, "Only approved stores can post products.")
+        messages.error(request, "Only stores can post products.")
         return redirect('home')
     
-    # Initialize the form
     if request.method == 'POST':
         form = PostingProducts(request.POST, request.FILES)
         if form.is_valid():
-            # Save the product while associating it with the store
             new_product = form.save(commit=False)
-            new_product.store = store  # Associate the product with the current store
+            new_product.store = store
             new_product.save()
 
             messages.success(request, "Product posted successfully!")
-            return redirect('store_page', store_id=store.id)  # Redirect to store page
+            return redirect('store_page', store_id=store.id)
 
         else:
-            # Debug invalid form errors
             print("Form is invalid:")
-            print(form.errors)  # Output errors for debugging
+            print(form.errors)
             messages.error(request, "Failed to post the product. Please check the form.")
 
     else:
@@ -407,12 +482,9 @@ def posting_product(request):
 def register_user(request):
     form = SignUpForm()
     if request.method == 'POST':
-        form = SignUpForm(request.POST, request.FILES)  # Handle file uploads via request.FILES
-        print("pre 1")
+        form = SignUpForm(request.POST, request.FILES)
 
         if form.is_valid():
-            print("pre 2")
-            # Create the User, Profile, Customer or Store as before
             user = form.save(commit=False)
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
@@ -442,7 +514,6 @@ def register_user(request):
                 c.save()
 
             store_kind = form.cleaned_data.get('store_kind')
-            # Only create a store instance if the user is a store owner
             if role == 'store':
                 s = Store.objects.create(user=u)
                 s.latitude = latitude
@@ -450,22 +521,18 @@ def register_user(request):
                 s.address = address
                 s.store_name = store_name
                 s.store_kind = store_kind
-                print(store_kind)
-                print(s.store_kind)
             
 
-                # Save profile picture and billboard picture if they exist
+                # Saving profile picture and billboard picture if they exist
                 if 'profile_picture' in request.FILES:
                     s.profile_picture = request.FILES['profile_picture']
                 if 'billboard_picture' in request.FILES:
                     s.billboard_picture = request.FILES['billboard_picture']
                 
                 s.save()
-            # Send a success message
             if role == 'store':
                 return redirect('profile_under_review')
             else:
-                # Log in the user
                 user = authenticate(username=username, password=password)
                 if user:
                     login(request, user)
@@ -476,6 +543,10 @@ def register_user(request):
     
     return render(request, 'register.html', {'form': form})
 
+from django_ratelimit.decorators import ratelimit
+
+
+@ratelimit(key='ip', rate='5/m', block=True)
 def login_user(request):
     if request.method == "POST":
         username = request.POST['username']
@@ -484,18 +555,13 @@ def login_user(request):
         if user is not None:
             login(request, user)
 
-            # Do some shopping cart stuff
             current_user = Profile.objects.get(user__id=request.user.id)
-            # Get their saved cart from database
+            # Getting users saved cart from database
             saved_cart = current_user.old_cart
-            # Convert database string t
-            # o python dictionary
+
             if saved_cart:
-                # Convert to dictionary using JSON
                 converted_cart = json.loads(saved_cart)
-                # Add the loaded cart dictionary to our session
                 cart = Cart(request)
-                # Load through the cart and add the items from the database
                 for key, value in converted_cart.items():
                     cart.add(product=key, quantity=value)
 
@@ -507,8 +573,6 @@ def login_user(request):
 
             messages.success(request, ("You have been logged in..."))
             return redirect('home')
-            # else:
-            # return redirect('store_page')
         else:
             messages.success(request, ("There was a an error, please try again"))
             return redirect('login')

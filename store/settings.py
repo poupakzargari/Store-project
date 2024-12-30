@@ -12,9 +12,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-0(jmewseeip&s!-zd#u#58&!oe^jm@c*zb%_7$iyu*dt69e4fn'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True  # Ensure debug is set to False for custom error pages to work
+# ALLOWED_HOSTS = ['yourdomain.com', 'localhost', '127.0.0.1']
 
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -29,8 +29,27 @@ INSTALLED_APPS = [
     'mystore',
     'cart',
     # Other apps
-    'cities_light'
+    'cities_light',
+    'rest_framework',
+    'rest_framework.authtoken'
 ]
+
+# settings.py
+import os
+
+if DEBUG:  # Development
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
+else:  # Production
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -62,6 +81,15 @@ TEMPLATES = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
 WSGI_APPLICATION = 'store.wsgi.application'
 DJANGO_SETTINGS_MODULE = 'blossom.settings'
 # GDAL_LIBRARY_PATH = ''
@@ -73,7 +101,7 @@ DJANGO_SETTINGS_MODULE = 'blossom.settings'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mystore2',
+        'NAME': 'mystore3',
         'USER': 'postgres',
         'PASSWORD': '3PelRandy$',
         'HOST': 'localhost',
@@ -99,6 +127,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# PASSWORD_HASHERS = [
+#     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+#     'django.contrib.auth.hashers.Argon2PasswordHasher',
+#     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+#     'django.contrib.auth.hashers.ScryptPasswordHasher',
+# ]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -118,9 +153,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = ['static/']
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-
+MEDIA_URL = '/media/'  
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

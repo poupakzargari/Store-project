@@ -51,10 +51,8 @@ from .models import User, Store, Profile
 
 
 class UpdateUserForm(UserChangeForm):
-    # Hide Password stuff
     password = None
 
-    # Get other fields
     email = forms.EmailField(
         label="",
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}),
@@ -96,11 +94,9 @@ class UpdateUserForm(UserChangeForm):
         fields = ('username', 'first_name', 'last_name', 'email')
 
     def __init__(self, *args, **kwargs):
-        # Check if the user is a store
         user_instance = kwargs.get('instance')
         self.is_store = False
 
-        # Determine role and show/hide fields based on role
         if user_instance:
             profile = getattr(user_instance, 'profile', None)
             if profile and profile.role == 'store':
@@ -108,13 +104,11 @@ class UpdateUserForm(UserChangeForm):
 
         super(UpdateUserForm, self).__init__(*args, **kwargs)
 
-        # Customize widget attributes
         self.fields['username'].widget.attrs['class'] = 'form-control'
         self.fields['username'].widget.attrs['placeholder'] = 'User Name'
         self.fields['username'].label = ''
         self.fields['username'].help_text = '<span class="form-text text-muted"><small>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</small></span>'
 
-        # Hide store-specific fields if the user is not a store
         if not self.is_store:
             self.fields.pop('profile_picture', None)
             self.fields.pop('billboard_picture', None)
@@ -128,25 +122,24 @@ class SignUpForm(UserCreationForm):
 	password2 = forms.CharField(widget=forms.PasswordInput)
 	phone = forms.CharField(max_length=20)
     
-    # Role field
 	ROLE_CHOICES = (
-		('', 'Select Role'),  # Placeholder choice
+		('', 'Select Role'),
 		('customer', 'Customer'),
 		('store', 'Store'),
 	)
 
 	STORE_KINDS = (
-		('', 'Select Type'),  # Placeholder choice
-		('supermarket', 'Supermarket'),
-		('home_decor', 'Home_Decor'),
-		('stationary', 'Stationary'),
-		('cafe', 'Cafe'),
+        ('supermarket', 'Supermarket'),
+        ('cafe', 'Cafe'),
+        ('stationary', 'Stationary Store'),
+        ('home_decor', 'Home Decor Store'),
+        ('makeup', 'Makeup'),
+        ('clothes', 'Clothes'),
+        ('store', 'Store'),
 	)
 
 	role = forms.ChoiceField(choices=ROLE_CHOICES)
 	store_kind = forms.ChoiceField(choices=STORE_KINDS)
-    
-    # Conditional fields
 	address = forms.CharField(max_length=255, required=False)
 	store_name = forms.CharField(max_length=100, required=False)
 	latitude = forms.FloatField(required=False, widget=forms.HiddenInput())
@@ -166,7 +159,6 @@ class SignUpForm(UserCreationForm):
 		if password1 and password2 and password1 != password2:
 			self.add_error('password2', "Passwords do not match.")
 		
-		# Validation for role-specific fields
 		if role == 'store' and not cleaned_data.get("store_name"):
 			self.add_error('store_name', "Store name is required for store role.")
 		if role == 'customer' and not cleaned_data.get("address"):

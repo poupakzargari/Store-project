@@ -5,6 +5,15 @@
     <!-- Category Title -->
     <h1 class="text-center text-primary mb-4">{{ category.name }}</h1>
 
+    <div class="d-flex justify-content-end mb-3">
+        <label for="sort-select" class="form-label me-2">Sort by:</label>
+        <select id="sort-select" class="form-select form-select-sm" style="width: 200px;">
+            <option value="default" {% if current_sort == 'default' %}selected{% endif %}>Default</option>
+            <option value="price_increasing" {% if current_sort == 'price_increasing' %}selected{% endif %}>Price Increasing</option>
+            <option value="price_decreasing" {% if current_sort == 'price_decreasing' %}selected{% endif %}>Price Decreasing</option>
+        </select>
+    </div>
+
     <!-- Product Grid -->
     <div class="row g-4">
         {% for product in products %}
@@ -21,6 +30,7 @@
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title text-center">{{ product.name }}</h5>
                         <p class="card-text text-muted text-truncate text-center">{{ product.description }}</p>
+                        <p class="card-text text-muted text-truncate text-center">{{ product.price }}</p>
                         <a href="{{ product.get_absolute_url }}" class="btn btn-primary mt-auto">View Details</a>
                     </div>
                 </div>
@@ -28,4 +38,14 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+    document.getElementById('sort-select').addEventListener('change', function () {
+        const selectedSort = this.value;
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('sort', selectedSort);
+        window.location.href = currentUrl;
+    });
+</script>
+
 {% endblock %}

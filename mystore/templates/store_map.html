@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
     <style>
-        /* General Styling */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -80,10 +79,10 @@
         {{ stores|safe }}
     </script>
     <script>
-        // Initialize the map, centered on Iran
+        // Initializing the map, centered on Iran
         const map = L.map('map').setView([32.4279, 53.6880], 6); // Default view over Iran
     
-        // Add OpenStreetMap tiles
+        // Adding OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
@@ -113,14 +112,14 @@ function createStoreIcon(type, size) {
     });
 }
 
-// Add a marker for each store
+// Adding a marker for each store
 stores.forEach(store => {
     if (store.latitude && store.longitude) {
         const marker = L.marker([store.latitude, store.longitude], {
-            icon: createStoreIcon(store.type, [32, 32]) // Pass the store type here
+            icon: createStoreIcon(store.store_kind, [32, 32])
         }).addTo(map);
 
-        // Add tooltip and popup as before
+        // Adding tooltip and popup as before
         marker.bindTooltip(store.store_name, {
             permanent: true,
             direction: 'bottom',
@@ -141,13 +140,10 @@ stores.forEach(store => {
         });
     }
 });
-     
-        // Listen for zoom level changes
         map.on('zoomend', () => {
             addMarkers();
         });
     
-        // Add markers initially based on the starting zoom level
         addMarkers();
     </script>
     
